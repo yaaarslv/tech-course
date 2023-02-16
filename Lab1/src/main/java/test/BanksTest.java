@@ -9,7 +9,7 @@ import java.text.ParseException;
 import org.junit.*;
 
 /**
- * The BanksTest class is used to test the methods of classes
+ * The BanksTest class is used to test the class methods
  */
 public class BanksTest {
     private final CentralBank centralBank = CentralBank.getInstance();
