@@ -19,8 +19,9 @@ import banks.Tools.ClientException;
 import banks.Tools.PassportException;
 import banks.Tools.PhoneNumberException;
 import banks.Tools.TransactionException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 
 /**
  * The BanksTest class is used to test the class methods.
@@ -37,8 +38,8 @@ public class BanksTest {
     public void createBankAndSetPercents() throws BankException, TransactionException {
         Bank bank = centralBank.createBank("Sberbank");
         bank.setDebitPercent(BigDecimal.valueOf(5));
-        Assert.assertTrue(centralBank.getBanks().contains(bank));
-        Assert.assertEquals(bank.getBankPercents().getDebitPercent(), BigDecimal.valueOf(5));
+        Assertions.assertTrue(centralBank.getBanks().contains(bank));
+        Assertions.assertEquals(bank.getBankPercents().getDebitPercent(), BigDecimal.valueOf(5));
     }
 
     /**
@@ -64,8 +65,8 @@ public class BanksTest {
         clientBuilder.addPhoneNumber(phoneNumber);
         Client client = clientBuilder.createClient();
         bank.createDepositAccount(client, BigDecimal.valueOf(10000));
-        Assert.assertTrue(bank.getClients().contains(client));
-        Assert.assertEquals(client.getBankAccounts().get(0).getStartMoney(), BigDecimal.valueOf(10000));
+        Assertions.assertTrue(bank.getClients().contains(client));
+        Assertions.assertEquals(client.getBankAccounts().get(0).getStartMoney(), BigDecimal.valueOf(10000));
     }
 
     /**
@@ -85,7 +86,7 @@ public class BanksTest {
         Client client = clientBuilder.createClient();
         CreditAccount creditAccount = bank.createCreditAccount(client, BigDecimal.valueOf(10000));
         creditAccount.withdraw(BigDecimal.valueOf(200));
-        Assert.assertEquals(creditAccount.getTransactions().get(0).getCommission(), BigDecimal.valueOf(50));
+        Assertions.assertEquals(creditAccount.getTransactions().get(0).getCommission(), BigDecimal.valueOf(50));
     }
 
     /**
@@ -103,8 +104,8 @@ public class BanksTest {
         DebitAccount debitAccount = bank.createDebitAccount(client, BigDecimal.valueOf(10000));
         debitAccount.withdraw(BigDecimal.valueOf(9999));
         bank.cancelTransaction(debitAccount.getTransactions().get(0));
-        Assert.assertTrue(debitAccount.getTransactions().get(0).getIsCancelled());
-        Assert.assertEquals(debitAccount.getMoney(), BigDecimal.valueOf(10000));
+        Assertions.assertTrue(debitAccount.getTransactions().get(0).getIsCancelled());
+        Assertions.assertEquals(debitAccount.getMoney(), BigDecimal.valueOf(10000));
     }
 
     /**
@@ -122,7 +123,7 @@ public class BanksTest {
         DebitAccount debitAccount = bank.createDebitAccount(client, BigDecimal.valueOf(10000));
         client.subscribeToNotifications(new SimpleNotification());
         bank.setLimit(BigDecimal.valueOf(30000));
-        Assert.assertTrue(client.getSubscribedToNotifications());
-        Assert.assertTrue(client.getNotificator().getIsNotified());
+        Assertions.assertTrue(client.getSubscribedToNotifications());
+        Assertions.assertTrue(client.getNotificator().getIsNotified());
     }
 }
