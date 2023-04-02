@@ -9,8 +9,6 @@ import java.sql.Date;
 @Entity
 @Table(name = "Cat")
 public class Cat {
-    private static final int START_ID = 0;
-
     @Id
     @Column(name = "Идентификатор")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +39,6 @@ public class Cat {
             throw CatException.breedIsNullException();
         }
 
-        this.id = START_ID;
         this.name = name;
         this.birthdate = birthdate;
         this.breed = breed;

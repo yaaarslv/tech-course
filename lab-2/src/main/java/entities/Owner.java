@@ -1,18 +1,21 @@
 package entities;
 
 import tools.OwnerException;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.sql.Date;
 
 @Entity
 @Table(name = "Owner")
 public class Owner {
-    private static final int START_ID = 0;
-
     @Id
     @Column(name = "Идентификатор")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column (name = "Имя")
     private String name;
@@ -25,7 +28,6 @@ public class Owner {
             throw OwnerException.nameIsNullException();
         }
 
-        this.id = START_ID;
         this.name = name;
         this.birthdate = birthdate;
     }

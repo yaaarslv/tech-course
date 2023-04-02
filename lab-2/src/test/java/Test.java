@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
 
-public class test {
+public class Test {
     public static void main(String[] args) throws SQLException, OwnerException, CatException, ConnectionException, IOException {
         Service service = new Service(1430, "lab-2", "yaaarsl_v", "Password123");
         Owner owner = new Owner("Тестовый челик", new Date(2023 - 1900, 2, 29));
