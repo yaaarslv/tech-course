@@ -1,0 +1,21 @@
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Confi 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+                <property name="url" value="jdbc:sqlserver://localhost:1430;database=lab-2;trustServerCertificate=true"/>
+                <property name="username" value="yaaarsl_v"/>
+                <property name="password" value="Password123"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper class = "catConnections.CatMapper"/>
+        <mapper class = "ownerConnections.OwnerMapper"/>
+    </mappers>
+
+</configuration>
