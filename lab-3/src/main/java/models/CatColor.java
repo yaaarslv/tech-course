@@ -1,9 +1,9 @@
 package models;
 
 public enum CatColor {
-    White,
-    Red,
-    Brown,
-    Gray,
-    Black
+    WHITE,
+    RED,
+    BROWN,
+    GRAY,
+    BLACK
 }
