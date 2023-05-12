@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import models.CatColor;
 import tools.CatException;
 import tools.OwnerException;
+
 import java.sql.Date;
 
 @Entity

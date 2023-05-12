@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import services.UserService;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -34,10 +35,10 @@ public class UserController {
         return ResponseEntity.ok(user.get());
     }
 
-    @GetMapping("/getByOwnerId/{id}")
+    @GetMapping("/getByCatOwnerId/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getUsersByOwnerId(@PathVariable Long id) {
-        List<User> users = userService.getAllByOwnerId(id);
+    public ResponseEntity<List<User>> getUsersByCatOwnerId(@PathVariable Long id) {
+        List<User> users = userService.getAllByCatOwnerId(id);
         return ResponseEntity.ok(users);
     }
 

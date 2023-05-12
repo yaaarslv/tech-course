@@ -31,16 +31,16 @@ public class User {
     @Column(name = "status")
     private String status;
 
-    @Column (name = "ownerId")
-    private long ownerId;
+    @Column (name = "cat_owner_id")
+    private long catOwnerId;
 
-    public User(Long id, String login, String password, Role role, String status, long ownerId) {
+    public User(Long id, String login, String password, Role role, String status, long catOwnerId) {
         this.id = id;
         this.login = login;
         this.password = password;
         this.role = role;
         this.status = status;
-        this.ownerId = ownerId;
+        this.catOwnerId = catOwnerId;
     }
 
     public User() {
@@ -78,11 +78,19 @@ public class User {
         this.role = role;
     }
 
-    public long getOwnerId() {
-        return ownerId;
+    public long getCatOwnerId() {
+        return catOwnerId;
     }
 
-    public void setOwnerId(long ownerId) {
-        this.ownerId = ownerId;
+    public void setCatOwnerId(long ownerId) {
+        this.catOwnerId = ownerId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
