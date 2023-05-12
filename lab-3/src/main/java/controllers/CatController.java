@@ -15,7 +15,6 @@ import services.CatService;
 import java.util.List;
 import java.util.Optional;
 
-
 @RestController
 @RequestMapping("/cats")
 public class CatController {

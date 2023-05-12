@@ -13,7 +13,6 @@ import tools.CatException;
 import tools.OwnerException;
 import java.sql.Date;
 
-
 @Entity
 @Table(name = "Cat")
 public class Cat {
