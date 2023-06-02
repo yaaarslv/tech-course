@@ -12,89 +12,78 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ownerConsumer.OwnerKafkaConsumer;
 import ownerProducer.OwnerKafkaProducer;
-import ownerServices.OwnerService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/owners")
 @PreAuthorize("hasRole('ADMIN')")
 public class OwnerController {
-    private final OwnerService ownerService;
-
     private final OwnerKafkaProducer producer;
 
+    private final OwnerKafkaConsumer consumer;
+
     @Autowired
-    public OwnerController(OwnerService ownerService, OwnerKafkaProducer producer) {
-        this.ownerService = ownerService;
+    public OwnerController(OwnerKafkaProducer producer, OwnerKafkaConsumer consumer) {
         this.producer = producer;
+        this.consumer = consumer;
     }
 
     @GetMapping("/getById/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Owner> getOwnerById(@PathVariable Long id) {
-        Optional<Owner> owner = ownerService.getById(id);
-        producer.sendOwnerData(owner.get().getId(), owner.get().getName(), owner.get().getBirthdate());
-        return ResponseEntity.ok(owner.get());
+    public ResponseEntity<List<Owner>> getOwnerById(@PathVariable Long id) {
+        producer.sendGetOwnerByIdMessage(id);
+        return consumer.getResult();
     }
 
     @GetMapping("/getAllByName/{name}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Owner>> getAllOwnersByName(@PathVariable String name) {
-        List<Owner> owners = ownerService.getAllByName(name);
-        owners.forEach(owner -> producer.sendOwnerData(owner.getId(), owner.getName(), owner.getBirthdate()));
-        return ResponseEntity.ok(owners);
+        producer.sendGetOwnersByNameMessage(name);
+        return consumer.getResult();
     }
 
     @GetMapping("/getAll")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Owner>> getAllOwners() {
-        List<Owner> owners = ownerService.getAll();
-        owners.forEach(owner -> producer.sendOwnerData(owner.getId(), owner.getName(), owner.getBirthdate()));
-        return ResponseEntity.ok(owners);
+        producer.sendGetAllOwnersMessage();
+        return consumer.getResult();
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Owner> createOwner(@RequestBody Owner owner) {
-        Owner createdOwner = ownerService.save(owner);
-        producer.sendOwnerData(owner.getId(), owner.getName(), owner.getBirthdate());
-        return ResponseEntity.ok(createdOwner);
+    public ResponseEntity<List<Owner>> createOwner(@RequestBody Owner owner) {
+        producer.sendCreateOwnerMessage(owner);
+        return consumer.getResult();
     }
 
     @PutMapping("/update")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Owner> updateOwner(@RequestBody Owner owner) {
-        Owner updatedOwner = ownerService.update(owner);
-        producer.sendOwnerData(updatedOwner.getId(), updatedOwner.getName(), updatedOwner.getBirthdate());
-        return ResponseEntity.ok(updatedOwner);
+    public ResponseEntity<List<Owner>> updateOwner(@RequestBody Owner owner) {
+        producer.sendUpdateOwnerMessage(owner);
+        return consumer.getResult();
     }
 
     @DeleteMapping("/deleteById/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteOwner(@PathVariable Long id) {
-        Optional<Owner> owner = ownerService.getById(id);
-        producer.sendOwnerData(owner.get().getId(), owner.get().getName(), owner.get().getBirthdate());
-        ownerService.deleteById(id);
+        producer.sendDeleteOwnerByIdMessage(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deleteByEntity")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteOwnerByEntity(@RequestBody Owner owner) {
-        producer.sendOwnerData(owner.getId(), owner.getName(), owner.getBirthdate());
-        ownerService.deleteByEntity(owner);
+        producer.sendDeleteOwnerByEntityMessage(owner);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deleteAll")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAllOwners() {
-        List<Owner> owners = ownerService.getAll();
-        owners.forEach(owner -> producer.sendOwnerData(owner.getId(), owner.getName(), owner.getBirthdate()));
-        ownerService.deleteAll();
+        producer.sendDeleteAllOwnersMessage();
         return ResponseEntity.ok().build();
     }
 }

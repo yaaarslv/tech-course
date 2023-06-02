@@ -1,15 +1,12 @@
 package catProducers;
 
 import catWrappers.CatDataWrapper;
-import models.CatColor;
+import entities.Cat;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-
-import java.sql.Date;
-import java.util.Properties;
 
 @Service
 public class CatKafkaProducer {
@@ -17,18 +14,72 @@ public class CatKafkaProducer {
 
     private final String topic;
 
-    public CatKafkaProducer() {
-        Properties properties = new Properties();
-        properties.put("bootstrap.servers", "localhost:9092");
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "catSerialization.CatDataWrapperSerializer");
-        this.producer = new KafkaProducer<>(properties);
-        this.topic = "cats_topic";
+    @Autowired
+    public CatKafkaProducer(KafkaProducer<String, CatDataWrapper> producer) {
+        this.producer = producer;
+        this.topic = "cat_topic";
     }
 
-    public void sendCatData(Long id, String name, Date birthdate, String breed, CatColor color, long ownerId, int tailLength) {
-        CatDataWrapper catDataWrapper = new CatDataWrapper(id, name, birthdate, breed, color, ownerId, tailLength);
-        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, "cat_id", catDataWrapper);
+    public void sendGetCatByIdMessage(Long id) {
+        String key = "getCatById";
+        CatDataWrapper catData = new CatDataWrapper(id, null, null, null, null, 0, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendGetCatsByOwnerIdMessage(Long id) {
+        String key = "getCatsByOwnerId";
+        CatDataWrapper catData = new CatDataWrapper(0L, null, null, null, null, id, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendGetCatsByNameMessage(String name) {
+        String key = "getCatsByName";
+        CatDataWrapper catData = new CatDataWrapper(0L, name, null, null, null, 0, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendGetAllCatsMessage() {
+        String key = "getAllCats";
+        CatDataWrapper catData = new CatDataWrapper(0L, null, null, null, null, 0, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendCreateCatMessage(Cat cat) {
+        String key = "createCat";
+        CatDataWrapper catData = CatDataWrapper.toWrapper(cat);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendUpdateCatMessage(Cat cat) {
+        String key = "updateCat";
+        CatDataWrapper catData = CatDataWrapper.toWrapper(cat);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendDeleteCatByIdMessage(Long id) {
+        String key = "deleteCatById";
+        CatDataWrapper catData = new CatDataWrapper(id, null, null, null, null, 0, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendDeleteCatByEntityMessage(Cat cat) {
+        String key = "deleteCatByEntity";
+        CatDataWrapper catData = CatDataWrapper.toWrapper(cat);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
+        producer.send(record);
+    }
+
+    public void sendDeleteAllCatsMessage() {
+        String key = "deleteAllCats";
+        CatDataWrapper catData = new CatDataWrapper(0L, null, null, null, null, 0, 0);
+        ProducerRecord<String, CatDataWrapper> record = new ProducerRecord<>(topic, key, catData);
         producer.send(record);
     }
 }

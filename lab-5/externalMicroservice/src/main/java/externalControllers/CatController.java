@@ -1,5 +1,6 @@
 package externalControllers;
 
+import catConsumers.CatKafkaConsumer;
 import catProducers.CatKafkaProducer;
 import entities.Cat;
 import entities.User;
@@ -18,37 +19,34 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import catServices.CatService;
 import externalServices.UserService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/cats")
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class CatController {
-    private final CatService catService;
-
     private final UserService userService;
 
     private final CatKafkaProducer producer;
 
+    private final CatKafkaConsumer consumer;
+
     @Autowired
-    public CatController(CatService catService, UserService userService, CatKafkaProducer producer) {
-        this.catService = catService;
+    public CatController(UserService userService, CatKafkaProducer producer, CatKafkaConsumer consumer) {
         this.userService = userService;
         this.producer = producer;
+        this.consumer = consumer;
     }
 
     @GetMapping("/getById/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Cat> getCatById(@PathVariable Long id) {
-        Optional<Cat> cat = catService.getById(id);
-        long ownerId = cat.get().getOwnerId();
+    public ResponseEntity<List<Cat>> getCatById(@PathVariable Long id) {
+        producer.sendGetCatByIdMessage(id);
+        long ownerId = consumer.getResult().getBody().get(0).getOwnerId();
         if (ownerId == getCurrentUserId() || isAdmin()) {
-            producer.sendCatData(cat.get().getId(), cat.get().getName(), cat.get().getBirthdate(), cat.get().getBreed(), cat.get().getColor(), cat.get().getOwnerId(), cat.get().getTailLength());
-            return ResponseEntity.ok(cat.get());
+            return consumer.getResult();
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -58,9 +56,8 @@ public class CatController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<Cat>> getCatsByOwnerId(@PathVariable Long id) {
         if (id == getCurrentUserId() || isAdmin()) {
-            List<Cat> cats = catService.getAllByOwnerId(id);
-            cats.forEach(cat -> producer.sendCatData(cat.getId(), cat.getName(), cat.getBirthdate(), cat.getBreed(), cat.getColor(), cat.getOwnerId(), cat.getTailLength()));
-            return ResponseEntity.ok(cats);
+            producer.sendGetCatsByOwnerIdMessage(id);
+            return consumer.getResult();
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -69,45 +66,35 @@ public class CatController {
     @GetMapping("/getAllByName/{name}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<Cat>> getAllCatsByName(@PathVariable String name) {
-        List<Cat> cats = catService.getAllByName(name);
         if (isAdmin()) {
-            cats.forEach(cat -> producer.sendCatData(cat.getId(), cat.getName(), cat.getBirthdate(), cat.getBreed(), cat.getColor(), cat.getOwnerId(), cat.getTailLength()));
-            return ResponseEntity.ok(cats);
+            producer.sendGetCatsByNameMessage(name);
+            return consumer.getResult();
         } else {
-            List<Cat> ownersCat = cats.stream().filter(c -> c.getOwnerId() == getCurrentUserId()).toList();
-            ownersCat.forEach(cat -> producer.sendCatData(cat.getId(), cat.getName(), cat.getBirthdate(), cat.getBreed(), cat.getColor(), cat.getOwnerId(), cat.getTailLength()));
-            return ResponseEntity.ok(ownersCat);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 
     @GetMapping("/getAll")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Cat>> getAllCats() {
-        if (isAdmin()) {
-            List<Cat> cats = catService.getAll();
-            cats.forEach(cat -> producer.sendCatData(cat.getId(), cat.getName(), cat.getBirthdate(), cat.getBreed(), cat.getColor(), cat.getOwnerId(), cat.getTailLength()));
-            return ResponseEntity.ok(cats);
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        producer.sendGetAllCatsMessage();
+        return consumer.getResult();
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Cat> createCat(@RequestBody Cat cat) {
-        Cat createdCat = catService.save(cat);
-        producer.sendCatData(createdCat.getId(), createdCat.getName(), createdCat.getBirthdate(), createdCat.getBreed(), createdCat.getColor(), createdCat.getOwnerId(), createdCat.getTailLength());
-        return ResponseEntity.ok(createdCat);
+    public ResponseEntity<List<Cat>> createCat(@RequestBody Cat cat) {
+        producer.sendCreateCatMessage(cat);
+        return consumer.getResult();
     }
 
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Cat> updateCat(@RequestBody Cat cat) {
-        Cat updatedCat = catService.update(cat);
-        long ownerId = updatedCat.getOwnerId();
+    public ResponseEntity<List<Cat>> updateCat(@RequestBody Cat cat) {
+        producer.sendUpdateCatMessage(cat);
+        long ownerId = consumer.getResult().getBody().get(0).getOwnerId();
         if (ownerId == getCurrentUserId() || isAdmin()) {
-            producer.sendCatData(updatedCat.getId(), updatedCat.getName(), updatedCat.getBirthdate(), updatedCat.getBreed(), updatedCat.getColor(), updatedCat.getOwnerId(), updatedCat.getTailLength());
-            return ResponseEntity.ok(updatedCat);
+            return consumer.getResult();
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -116,42 +103,22 @@ public class CatController {
     @DeleteMapping("/deleteById/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteCatById(@PathVariable Long id) {
-        Optional<Cat> cat = catService.getById(id);
-        long ownerId = cat.get().getOwnerId();
-        if (ownerId == getCurrentUserId() || isAdmin()) {
-            producer.sendCatData(cat.get().getId(), cat.get().getName(), cat.get().getBirthdate(), cat.get().getBreed(), cat.get().getColor(), cat.get().getOwnerId(), cat.get().getTailLength());
-            catService.deleteById(id);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        producer.sendDeleteCatByIdMessage(id);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deleteByEntity")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Void> deleteCatByEntity(@RequestBody Cat cat) {
-        Optional<Cat> catById = catService.getById(cat.getId());
-        long ownerId = catById.get().getOwnerId();
-        if (ownerId == getCurrentUserId() || isAdmin()) {
-            producer.sendCatData(catById.get().getId(), catById.get().getName(), catById.get().getBirthdate(), catById.get().getBreed(), catById.get().getColor(), catById.get().getOwnerId(), catById.get().getTailLength());
-            catService.deleteByEntity(cat);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        producer.sendDeleteCatByEntityMessage(cat);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deleteAll")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAllCats() {
-        if (isAdmin()) {
-            List<Cat> cats = catService.getAll();
-            cats.forEach(cat -> producer.sendCatData(cat.getId(), cat.getName(), cat.getBirthdate(), cat.getBreed(), cat.getColor(), cat.getOwnerId(), cat.getTailLength()));
-            catService.deleteAll();
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        producer.sendDeleteAllCatsMessage();
+        return ResponseEntity.ok().build();
     }
 
     private boolean isAdmin() {
@@ -162,7 +129,6 @@ public class CatController {
     private long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        System.out.println(username);
         User user = userService.getByLogin(username);
         return user.getCatOwnerId();
     }

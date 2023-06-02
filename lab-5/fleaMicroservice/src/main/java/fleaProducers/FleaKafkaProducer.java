@@ -1,12 +1,12 @@
 package fleaProducers;
 
+import entities.Flea;
 import fleaWrappers.FleaDataWrapper;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Properties;
 
 @Service
 public class FleaKafkaProducer {
@@ -14,18 +14,72 @@ public class FleaKafkaProducer {
 
     private final String topic;
 
-    public FleaKafkaProducer() {
-        Properties properties = new Properties();
-        properties.put("bootstrap.servers", "localhost:9092");
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "fleaSerialization.FleaDataWrapperSerializer");
-        this.producer = new KafkaProducer<>(properties);
-        this.topic = "fleas_topic";
+    @Autowired
+    public FleaKafkaProducer(KafkaProducer<String, FleaDataWrapper> producer) {
+        this.producer = producer;
+        this.topic = "flea_topic";
     }
 
-    public void sendFleaData(Long id, String name, Long catId) {
-        FleaDataWrapper fleaDataWrapper = new FleaDataWrapper(id, name, catId);
-        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, "flea_id", fleaDataWrapper);
+    public void sendGetFleaByIdMessage(Long id) {
+        String key = "getFleaById";
+        FleaDataWrapper fleaData = new FleaDataWrapper(id, null, 0L);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendGetFleasByCatIdMessage(Long id) {
+        String key = "getFleasByCatId";
+        FleaDataWrapper fleaData = new FleaDataWrapper(0L, null,  id);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendGetFleasByNameMessage(String name) {
+        String key = "getFleasByName";
+        FleaDataWrapper fleaData = new FleaDataWrapper(0L, name, 0L);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendGetAllFleasMessage() {
+        String key = "getAllFleas";
+        FleaDataWrapper fleaData = new FleaDataWrapper(0L, null, 0L);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendCreateFleaMessage(Flea flea) {
+        String key = "createFlea";
+        FleaDataWrapper fleaData = FleaDataWrapper.toWrapper(flea);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendUpdateFleaMessage(Flea flea) {
+        String key = "updateFlea";
+        FleaDataWrapper fleaData = FleaDataWrapper.toWrapper(flea);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendDeleteFleaByIdMessage(Long id) {
+        String key = "deleteFleaById";
+        FleaDataWrapper fleaData = new FleaDataWrapper(id, null, 0L);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendDeleteFleaByEntityMessage(Flea flea) {
+        String key = "deleteFleaByEntity";
+        FleaDataWrapper fleaData = FleaDataWrapper.toWrapper(flea);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
+        producer.send(record);
+    }
+
+    public void sendDeleteAllFleasMessage() {
+        String key = "deleteAllFleas";
+        FleaDataWrapper fleaData = new FleaDataWrapper(0L, null, 0L);
+        ProducerRecord<String, FleaDataWrapper> record = new ProducerRecord<>(topic, key, fleaData);
         producer.send(record);
     }
 }
